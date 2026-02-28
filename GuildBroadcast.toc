@@ -3,5 +3,5 @@
 ## Notes: Lightweight minimap icon to broadcast guild messages with a customizable cooldown.
 ## Author: Tracer96
 ## SavedVariables: GuildBroadcastDB
-GuildBroadcast.xml
 GuildBroadcast.lua
+GuildBroadcast.xml
