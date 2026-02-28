@@ -16,6 +16,12 @@ GuildBroadcast_DefaultDB = {
 GuildBroadcast_LastSendTime = 0   -- GetTime() value of last broadcast
 GuildBroadcast_IsDragging   = false
 
+-- Auto-broadcast state (not persisted)
+GuildBroadcast_AutoMessage  = nil   -- message to auto-broadcast
+GuildBroadcast_AutoInterval = nil   -- interval in seconds
+GuildBroadcast_AutoLastTick = 0     -- GetTime() of last auto-broadcast tick
+GuildBroadcast_AutoEnabled  = false -- whether auto-broadcast is active
+
 -- ---------------------------------------------------------------------------
 -- Utility: print a message to the default chat frame
 -- ---------------------------------------------------------------------------
@@ -27,6 +33,7 @@ end
 -- Cooldown helpers
 -- ---------------------------------------------------------------------------
 function GuildBroadcast_GetRemaining()
+    if not GuildBroadcastDB then return 0 end
     local elapsed = GetTime() - GuildBroadcast_LastSendTime
     local remaining = GuildBroadcastDB.cooldownSeconds - elapsed
     if remaining < 0 then remaining = 0 end
@@ -103,12 +110,19 @@ end
 -- Button visual state (dim when on cooldown)
 -- ---------------------------------------------------------------------------
 function GuildBroadcast_UpdateButtonState()
-    if GuildBroadcast_IsReady() then
+    if not GuildBroadcastDB then return end
+    if GuildBroadcast_AutoEnabled then
         GuildBroadcastMinimapButton:GetNormalTexture():SetDesaturated(false)
         GuildBroadcastMinimapButton:GetNormalTexture():SetAlpha(1.0)
+        GuildBroadcastMinimapButton:GetNormalTexture():SetVertexColor(0.3, 1.0, 0.3)
+    elseif GuildBroadcast_IsReady() then
+        GuildBroadcastMinimapButton:GetNormalTexture():SetDesaturated(false)
+        GuildBroadcastMinimapButton:GetNormalTexture():SetAlpha(1.0)
+        GuildBroadcastMinimapButton:GetNormalTexture():SetVertexColor(1.0, 1.0, 1.0)
     else
         GuildBroadcastMinimapButton:GetNormalTexture():SetDesaturated(true)
         GuildBroadcastMinimapButton:GetNormalTexture():SetAlpha(0.5)
+        GuildBroadcastMinimapButton:GetNormalTexture():SetVertexColor(1.0, 1.0, 1.0)
     end
 end
 
@@ -247,6 +261,23 @@ function GuildBroadcast_MinimapButton_OnUpdate(button, elapsed)
 
     -- Periodically refresh the button visual (cooldown state)
     GuildBroadcast_UpdateButtonState()
+
+    -- Auto-broadcast tick
+    if GuildBroadcast_AutoEnabled then
+        local now = GetTime()
+        if now - GuildBroadcast_AutoLastTick >= GuildBroadcast_AutoInterval then
+            local guildName = GetGuildInfo("player")
+            if guildName and string.len(guildName) > 0 then
+                SendChatMessage(GuildBroadcast_AutoMessage, "GUILD")
+                GuildBroadcast_AutoLastTick = now
+                GuildBroadcast_Print("Auto-broadcast sent!")
+            else
+                GuildBroadcast_AutoEnabled = false
+                GuildBroadcast_UpdateButtonState()
+                GuildBroadcast_Print("Auto-broadcast stopped: you are not in a guild.")
+            end
+        end
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -294,6 +325,40 @@ function GuildBroadcast_SlashCommand(msg)
         else
             GuildBroadcast_Print("Status: Ready to broadcast!")
         end
+        if GuildBroadcast_AutoEnabled then
+            GuildBroadcast_Print("Auto-broadcast: enabled — every " .. GuildBroadcast_AutoInterval .. "s — \"" .. GuildBroadcast_AutoMessage .. "\"")
+        else
+            GuildBroadcast_Print("Auto-broadcast: disabled")
+        end
+        return
+    end
+
+    -- /gb auto <seconds> <message>
+    local autoStart, autoEnd, autoSeconds = string.find(msg, "^auto%s+(%d+)%s+")
+    if autoStart then
+        local seconds = tonumber(autoSeconds)
+        local message = string.sub(msg, autoEnd + 1)
+        message = string.gsub(message, "^%s+", "")
+        if not seconds or seconds < 10 then
+            GuildBroadcast_Print("Usage: /gb auto <seconds> <message> (minimum 10 seconds).")
+        elseif string.len(message) == 0 then
+            GuildBroadcast_Print("Usage: /gb auto <seconds> <message> (message cannot be empty).")
+        else
+            GuildBroadcast_AutoMessage  = message
+            GuildBroadcast_AutoInterval = seconds
+            GuildBroadcast_AutoLastTick = GetTime()
+            GuildBroadcast_AutoEnabled  = true
+            GuildBroadcast_UpdateButtonState()
+            GuildBroadcast_Print("Auto-broadcast started: every " .. seconds .. "s — \"" .. message .. "\"")
+        end
+        return
+    end
+
+    -- /gb stop
+    if msg == "stop" then
+        GuildBroadcast_AutoEnabled = false
+        GuildBroadcast_UpdateButtonState()
+        GuildBroadcast_Print("Auto-broadcast stopped.")
         return
     end
 
@@ -306,9 +371,11 @@ end
 -- ---------------------------------------------------------------------------
 function GuildBroadcast_PrintHelp()
     GuildBroadcast_Print("Commands:")
-    DEFAULT_CHAT_FRAME:AddMessage("  /gb send <message>  — Broadcast a guild message")
-    DEFAULT_CHAT_FRAME:AddMessage("  /gb cd <minutes>    — Set cooldown (e.g. /gb cd 10)")
-    DEFAULT_CHAT_FRAME:AddMessage("  /gb status          — Show cooldown status")
-    DEFAULT_CHAT_FRAME:AddMessage("  /gb                 — Show this help")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb send <message>               — Broadcast a guild message")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb cd <minutes>                 — Set cooldown (e.g. /gb cd 10)")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb status                       — Show cooldown status")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb auto <seconds> <message>     — Auto-broadcast every <seconds>s (min 10)")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb stop                         — Stop auto-broadcast")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gb                              — Show this help")
     DEFAULT_CHAT_FRAME:AddMessage("Left-click the minimap icon to open the broadcast window.")
 end

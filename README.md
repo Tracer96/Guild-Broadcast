@@ -11,6 +11,7 @@ A lightweight World of Warcraft 1.12 (Vanilla) addon that adds a **minimap broad
 - **Right-click** the icon to print slash-command help to chat.
 - **Hover tooltip** showing the addon name and current cooldown status (ready or time remaining).
 - **Cooldown system** — configurable cooldown between broadcasts (default: 5 minutes). The icon dims while on cooldown.
+- **Auto-broadcast** — automatically re-broadcast a saved message to guild chat every `N` seconds. The minimap icon turns green while active.
 - **Slash commands** — send broadcasts and adjust settings directly from the chat box.
 - **SavedVariables** — the cooldown duration and minimap icon position are saved between sessions.
 
@@ -38,7 +39,9 @@ A lightweight World of Warcraft 1.12 (Vanilla) addon that adds a **minimap broad
 | `/gb` or `/guildbroadcast` | Show help and available commands |
 | `/gb send <message>` | Send a guild broadcast directly from the command line |
 | `/gb cd <minutes>` | Set the cooldown in minutes (e.g. `/gb cd 10`) |
-| `/gb status` | Show the current cooldown status and configured duration |
+| `/gb status` | Show the current cooldown and auto-broadcast status |
+| `/gb auto <seconds> <message>` | Auto-broadcast `<message>` to guild every `<seconds>` seconds (min 10) |
+| `/gb stop` | Stop the auto-broadcast |
 
 ---
 
@@ -58,6 +61,16 @@ Click and drag the minimap icon to reposition it anywhere around the minimap bor
 /gb cd 10
 ```
 Sets the cooldown to 10 minutes. The new value is persisted across sessions.
+
+### Auto-broadcast
+```
+/gb auto 30 Raid starts in 5 minutes — get ready!
+```
+Automatically sends the message to guild chat every 30 seconds. The minimap icon turns **green** while active. Stop it with:
+```
+/gb stop
+```
+The minimum interval is 10 seconds to prevent spam.
 
 ---
 
