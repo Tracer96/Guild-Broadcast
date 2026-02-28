@@ -139,6 +139,15 @@ function GuildBroadcast_OnLoad()
     SLASH_GUILDBROADCAST1 = "/gb"
     SLASH_GUILDBROADCAST2 = "/guildbroadcast"
     SlashCmdList["GUILDBROADCAST"] = GuildBroadcast_SlashCommand
+
+    SLASH_GBROADCASTSEND1 = "/gsend"
+    SlashCmdList["GBROADCASTSEND"] = function(msg)
+        if not msg or string.len(msg) == 0 then
+            GuildBroadcast_Print("Usage: /gsend <message>")
+            return
+        end
+        GuildBroadcast_Send(msg)
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -376,6 +385,7 @@ end
 -- ---------------------------------------------------------------------------
 function GuildBroadcast_PrintHelp()
     GuildBroadcast_Print("Commands:")
+    DEFAULT_CHAT_FRAME:AddMessage("  /gsend <message>                 — Quick guild broadcast (with cooldown)")
     DEFAULT_CHAT_FRAME:AddMessage("  /gb send <message>               — Broadcast a guild message")
     DEFAULT_CHAT_FRAME:AddMessage("  /gb cd <minutes>                 — Set cooldown (e.g. /gb cd 10)")
     DEFAULT_CHAT_FRAME:AddMessage("  /gb status                       — Show cooldown status")
