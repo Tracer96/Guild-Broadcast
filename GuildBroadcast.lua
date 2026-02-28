@@ -15,6 +15,7 @@ GuildBroadcast_DefaultDB = {
 -- Runtime state (not persisted)
 GuildBroadcast_LastSendTime = 0   -- GetTime() value of last broadcast
 GuildBroadcast_IsDragging   = false
+GuildBroadcast_MouseIsDown  = false
 
 -- Auto-broadcast state (not persisted)
 GuildBroadcast_AutoMessage  = nil   -- message to auto-broadcast
@@ -221,19 +222,23 @@ end
 -- ---------------------------------------------------------------------------
 function GuildBroadcast_MinimapButton_OnMouseDown(button, mouseButton)
     if mouseButton == "LeftButton" then
+        GuildBroadcast_MouseIsDown = true
         GuildBroadcast_IsDragging = false
         GuildBroadcast_DragStartX, GuildBroadcast_DragStartY = GetCursorPosition()
     end
 end
 
 function GuildBroadcast_MinimapButton_OnMouseUp(button, mouseButton)
-    GuildBroadcast_IsDragging = false
+    if mouseButton == "LeftButton" then
+        GuildBroadcast_MouseIsDown = false
+        GuildBroadcast_IsDragging = false
+    end
 end
 
 function GuildBroadcast_MinimapButton_OnUpdate(button, elapsed)
     if not GuildBroadcast_IsDragging then
         -- Detect drag by checking if mouse moved more than 4 pixels since press
-        if IsMouseButtonDown("LeftButton") then
+        if GuildBroadcast_MouseIsDown then
             local cx, cy = GetCursorPosition()
             if GuildBroadcast_DragStartX then
                 local dx = cx - GuildBroadcast_DragStartX
