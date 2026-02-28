@@ -37,6 +37,7 @@ A lightweight World of Warcraft 1.12 (Vanilla) addon that adds a **minimap broad
 | Command | Description |
 |---|---|
 | `/gb` or `/guildbroadcast` | Show help and available commands |
+| `/gsend <message>` | Quick guild broadcast (respects cooldown) |
 | `/gb send <message>` | Send a guild broadcast directly from the command line |
 | `/gb cd <minutes>` | Set the cooldown in minutes (e.g. `/gb cd 10`) |
 | `/gb status` | Show the current cooldown and auto-broadcast status |
