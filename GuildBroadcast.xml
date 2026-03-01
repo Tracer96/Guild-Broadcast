@@ -58,10 +58,11 @@
     </Button>
 
     <!-- ============================================================
-         Broadcast input popup
+         Broadcast panel — centered, with message box, timer, and
+         Start / Stop / Close controls
          ============================================================ -->
-    <Frame name="GuildBroadcastPopup" frameStrata="DIALOG"
-           width="320" height="110" hidden="true">
+    <Frame name="GuildBroadcastPanel" frameStrata="DIALOG"
+           width="420" height="300" hidden="true" enableMouse="true">
         <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
                   edgeFile="Interface\DialogFrame\UI-DialogBox-Border"
                   tile="true">
@@ -80,12 +81,12 @@
         </Anchors>
         <Layers>
             <Layer level="ARTWORK">
-                <!-- Title text -->
-                <FontString name="GuildBroadcastPopupTitle"
+                <!-- Title -->
+                <FontString name="GuildBroadcastPanelTitle"
                             font="Fonts\FRIZQT__.TTF" text="Guild Broadcast"
                             justifyH="CENTER">
                     <FontHeight>
-                        <AbsValue val="14"/>
+                        <AbsValue val="16"/>
                     </FontHeight>
                     <Color r="1" g="0.82" b="0"/>
                     <Anchors>
@@ -96,15 +97,47 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
+                <!-- Interval label -->
+                <FontString name="GuildBroadcastIntervalLabel"
+                            font="Fonts\FRIZQT__.TTF" text="Interval (seconds):"
+                            justifyH="LEFT">
+                    <FontHeight>
+                        <AbsValue val="12"/>
+                    </FontHeight>
+                    <Color r="1" g="1" b="1"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+                            <Offset>
+                                <AbsValue x="20" y="-164"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <!-- Status text -->
+                <FontString name="GuildBroadcastStatusText"
+                            font="Fonts\FRIZQT__.TTF" text="Idle"
+                            justifyH="CENTER">
+                    <FontHeight>
+                        <AbsValue val="11"/>
+                    </FontHeight>
+                    <Color r="0.8" g="0.8" b="0.8"/>
+                    <Anchors>
+                        <Anchor point="BOTTOM" relativePoint="BOTTOM">
+                            <Offset>
+                                <AbsValue x="0" y="20"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
             </Layer>
         </Layers>
-        <!-- Message edit box -->
-        <EditBox name="GuildBroadcastEditBox" autoFocus="true"
-                 maxLetters="255" width="280" height="30">
+        <!-- Message text box (multi-line, max 255 chars = WoW guild chat limit) -->
+        <EditBox name="GuildBroadcastMessageBox" multiLine="true"
+                 autoFocus="false" maxLetters="255" width="380" height="100">
             <Anchors>
                 <Anchor point="TOP" relativePoint="TOP">
                     <Offset>
-                        <AbsValue x="0" y="-38"/>
+                        <AbsValue x="0" y="-44"/>
                     </Offset>
                 </Anchor>
             </Anchors>
@@ -128,21 +161,53 @@
                 </FontHeight>
             </FontString>
             <Scripts>
-                <OnEnterPressed>
-                    GuildBroadcast_SendFromPopup();
-                </OnEnterPressed>
                 <OnEscapePressed>
-                    GuildBroadcastPopup:Hide();
+                    GuildBroadcastPanel:Hide();
                 </OnEscapePressed>
             </Scripts>
         </EditBox>
-        <!-- Send button -->
-        <Button name="GuildBroadcastSendButton" text="Send"
+        <!-- Interval input -->
+        <EditBox name="GuildBroadcastIntervalBox"
+                 autoFocus="false" maxLetters="6" width="80" height="22">
+            <Anchors>
+                <Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+                    <Offset>
+                        <AbsValue x="160" y="-160"/>
+                    </Offset>
+                </Anchor>
+            </Anchors>
+            <Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background"
+                      edgeFile="Interface\Tooltips\UI-Tooltip-Border"
+                      tile="true">
+                <BackgroundInsets>
+                    <AbsInset left="4" right="4" top="4" bottom="4"/>
+                </BackgroundInsets>
+                <TileSize>
+                    <AbsValue val="16"/>
+                </TileSize>
+                <EdgeSize>
+                    <AbsValue val="16"/>
+                </EdgeSize>
+                <Color r="0" g="0" b="0" a="0.5"/>
+            </Backdrop>
+            <FontString font="Fonts\FRIZQT__.TTF">
+                <FontHeight>
+                    <AbsValue val="12"/>
+                </FontHeight>
+            </FontString>
+            <Scripts>
+                <OnEscapePressed>
+                    GuildBroadcastPanel:Hide();
+                </OnEscapePressed>
+            </Scripts>
+        </EditBox>
+        <!-- Start button -->
+        <Button name="GuildBroadcastStartButton" text="Start"
                 width="80" height="22">
             <Anchors>
-                <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM">
+                <Anchor point="BOTTOM" relativePoint="BOTTOM">
                     <Offset>
-                        <AbsValue x="-4" y="12"/>
+                        <AbsValue x="-90" y="50"/>
                     </Offset>
                 </Anchor>
             </Anchors>
@@ -150,7 +215,7 @@
             <PushedTexture file="Interface\Buttons\UI-Panel-Button-Down"/>
             <HighlightTexture file="Interface\Buttons\UI-Panel-Button-Highlight"
                               alphaMode="ADD"/>
-            <ButtonText name="GuildBroadcastSendButtonText"
+            <ButtonText name="GuildBroadcastStartButtonText"
                         font="Fonts\FRIZQT__.TTF">
                 <FontHeight>
                     <AbsValue val="12"/>
@@ -158,17 +223,17 @@
             </ButtonText>
             <Scripts>
                 <OnClick>
-                    GuildBroadcast_SendFromPopup();
+                    GuildBroadcast_Panel_Start();
                 </OnClick>
             </Scripts>
         </Button>
-        <!-- Cancel button -->
-        <Button name="GuildBroadcastCancelButton" text="Cancel"
+        <!-- Stop button -->
+        <Button name="GuildBroadcastStopButton" text="Stop"
                 width="80" height="22">
             <Anchors>
-                <Anchor point="BOTTOMLEFT" relativePoint="BOTTOM">
+                <Anchor point="BOTTOM" relativePoint="BOTTOM">
                     <Offset>
-                        <AbsValue x="4" y="12"/>
+                        <AbsValue x="10" y="50"/>
                     </Offset>
                 </Anchor>
             </Anchors>
@@ -176,7 +241,7 @@
             <PushedTexture file="Interface\Buttons\UI-Panel-Button-Down"/>
             <HighlightTexture file="Interface\Buttons\UI-Panel-Button-Highlight"
                               alphaMode="ADD"/>
-            <ButtonText name="GuildBroadcastCancelButtonText"
+            <ButtonText name="GuildBroadcastStopButtonText"
                         font="Fonts\FRIZQT__.TTF">
                 <FontHeight>
                     <AbsValue val="12"/>
@@ -184,14 +249,39 @@
             </ButtonText>
             <Scripts>
                 <OnClick>
-                    GuildBroadcastPopup:Hide();
+                    GuildBroadcast_Panel_Stop();
+                </OnClick>
+            </Scripts>
+        </Button>
+        <!-- Close button (X) -->
+        <Button name="GuildBroadcastCloseButton" text="X"
+                width="24" height="24">
+            <Anchors>
+                <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT">
+                    <Offset>
+                        <AbsValue x="-6" y="-6"/>
+                    </Offset>
+                </Anchor>
+            </Anchors>
+            <NormalTexture file="Interface\Buttons\UI-Panel-Button-Normal"/>
+            <PushedTexture file="Interface\Buttons\UI-Panel-Button-Down"/>
+            <HighlightTexture file="Interface\Buttons\UI-Panel-Button-Highlight"
+                              alphaMode="ADD"/>
+            <ButtonText name="GuildBroadcastCloseButtonText"
+                        font="Fonts\FRIZQT__.TTF">
+                <FontHeight>
+                    <AbsValue val="11"/>
+                </FontHeight>
+            </ButtonText>
+            <Scripts>
+                <OnClick>
+                    GuildBroadcastPanel:Hide();
                 </OnClick>
             </Scripts>
         </Button>
         <Scripts>
             <OnShow>
-                GuildBroadcastEditBox:SetText("");
-                GuildBroadcastEditBox:SetFocus();
+                GuildBroadcast_Panel_OnShow();
             </OnShow>
         </Scripts>
     </Frame>
